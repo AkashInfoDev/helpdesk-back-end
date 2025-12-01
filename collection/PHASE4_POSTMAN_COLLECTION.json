@@ -1,0 +1,559 @@
+{
+	"info": {
+		"_postman_id": "phase4-knowledge-base",
+		"name": "Phase 4 - Knowledge Base Management",
+		"description": "Phase 4: Knowledge Base Categories, Articles, Search, Versioning, and Feedback",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "KB Categories",
+			"item": [
+				{
+					"name": "Get Active Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/kb/categories/active",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"categories",
+								"active"
+							]
+						},
+						"description": "Get active KB categories (visible to customers)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Categories (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/kb/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"categories"
+							]
+						},
+						"description": "Get all KB categories including inactive (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    // API returns created resource under `data`",
+									"    pm.environment.set(\"kb_category_id\", jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Getting Started\",\n    \"description\": \"Getting started guides\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/kb/categories",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"categories"
+							]
+						},
+						"description": "Create new KB category (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Getting Started Updated\",\n    \"description\": \"Updated description\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/kb/categories/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"categories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{kb_category_id}}"
+								}
+							]
+						},
+						"description": "Update KB category (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/kb/categories/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"categories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{kb_category_id}}"
+								}
+							]
+						},
+						"description": "Delete KB category (Admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KB Articles",
+			"item": [
+				{
+					"name": "Search Articles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/kb/articles/search?q=login&category_id=&is_public=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"articles",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "login"
+								},
+								{
+									"key": "category_id",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "is_public",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Search KB articles (all roles can search)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Article by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    // Response contains article under `data`",
+									"    pm.environment.set(\"kb_article_id\", jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/kb/articles/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"articles",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{kb_article_id}}"
+								}
+							]
+						},
+						"description": "Get article by ID (role-based visibility)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Article (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    // Article create returns the created object under `data`",
+									"    pm.environment.set(\"kb_article_id\", jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"How to Reset Password\",\n    \"content\": \"<p>Follow these steps to reset your password:</p><ol><li>Click on Forgot Password</li><li>Enter your email</li><li>Check your email for reset link</li></ol>\",\n    \"category_id\": 1,\n    \"is_public\": true,\n    \"tags\": [\"password\", \"reset\", \"account\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/kb/articles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"articles"
+							]
+						},
+						"description": "Create new KB article (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Article (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"How to Reset Password - Updated\",\n    \"content\": \"<p>Updated content with more details...</p>\",\n    \"is_public\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/kb/articles/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"articles",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{kb_article_id}}"
+								}
+							]
+						},
+						"description": "Update KB article (creates version history) (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Article (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/kb/articles/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"articles",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{kb_article_id}}"
+								}
+							]
+						},
+						"description": "Delete KB article (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Article History (Admin/Agent)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/kb/articles/:id/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"articles",
+								":id",
+								"history"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{kb_article_id}}"
+								}
+							]
+						},
+						"description": "Get article version history (Admin/Agent only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Article Feedback",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"helpful\": true,\n    \"comment\": \"This article was very helpful!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/kb/articles/:id/feedback",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"articles",
+								":id",
+								"feedback"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{kb_article_id}}"
+								}
+							]
+						},
+						"description": "Submit feedback on article (helpful/not helpful) - All roles can submit"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KB Upload",
+			"item": [
+				{
+					"name": "Upload KB Image (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/kb/upload/image",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"kb",
+								"upload",
+								"image"
+							]
+						},
+						"description": "Upload image for KB article (Admin only) - Returns URL for Quill editor"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "customer_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "agent_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "kb_category_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "kb_article_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

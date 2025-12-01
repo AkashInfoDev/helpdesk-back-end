@@ -1,0 +1,35 @@
+{
+  "name": "customer_help_desk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "create-admin": "node create_admin.js",
+    "check-admin": "node check_admin.js",
+    "fix-admin": "node fix_admin.js",
+    "migrate": "node migrations/run_all_migrations.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.11",
+    "nodemon": "^3.1.11",
+    "sequelize": "^6.37.7",
+    "socket.io": "^4.8.1",
+    "winston": "^3.11.0"
+  }
+}

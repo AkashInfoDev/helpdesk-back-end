@@ -1,0 +1,491 @@
+{
+    "info": {
+        "_postman_id": "agent-flow-collection",
+        "name": "Agent - Live Chat Flow",
+        "description": "Postman collection for Agent role flows: login, view sessions, session messages, transfer/convert, availability, workload, and canned responses.\n\nUsage notes:\n- Set environment variable `base_url` (e.g., http://localhost:5000).\n- Use the login request to get `agent_token` (saved to environment).\n- Add `Authorization: Bearer {{agent_token}}` to protected requests.\n- Some actions (accepting sessions) are real-time (Socket.IO) and cannot be performed via REST; those steps are noted in descriptions.\n",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Agent Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"agent@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"agent\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login as an agent. On success this will return `{ token }`. The test script saves `agent_token` to the environment."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "  var json = pm.response.json();",
+                                    "  pm.environment.set('agent_token', json.token);",
+                                    "  if (json.user && json.user.id) pm.environment.set('agent_id', json.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Live Chat - Agent",
+            "item": [
+                {
+                    "name": "Get Agent Sessions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/agent/sessions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "agent",
+                                "sessions"
+                            ]
+                        },
+                        "description": "Get pending/active/closed sessions for the logged-in agent. Test script saves the first session id (if any) to `session_id`."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "  const json = pm.response.json();",
+                                    "  // collection returns data under `data` or `sessions` depending on controller; try both",
+                                    "  const arr = json.data || json.sessions || json;",
+                                    "  if (Array.isArray(arr) && arr.length > 0) {",
+                                    "    pm.environment.set('session_id', arr[0].id);",
+                                    "  }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Session Messages",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/{{session_id}}/messages",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "{{session_id}}",
+                                "messages"
+                            ]
+                        },
+                        "description": "Load messages for a session. Requires `session_id` to be set (from Get Agent Sessions)."
+                    }
+                },
+                {
+                    "name": "Convert Session → Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \n  \"subject\": \"Follow up ticket from chat\" \n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/{{session_id}}/convert-to-ticket",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "{{session_id}}",
+                                "convert-to-ticket"
+                            ]
+                        },
+                        "description": "Convert a chat session into a ticket. Requires agent or admin role."
+                    }
+                },
+                {
+                    "name": "Transfer Chat (to another agent)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"to_agent_id\": {{agent_id_to_transfer_to}},\n  \"reason\": \"Handing off to specialist\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/{{session_id}}/transfer",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "{{session_id}}",
+                                "transfer"
+                            ]
+                        },
+                        "description": "Transfer an active session to another agent. Requires `agent_id_to_transfer_to` variable set."
+                    }
+                },
+                {
+                    "name": "Queue Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/queue/stats",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "queue",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get queue statistics (agents/admins)."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                                    "let json;",
+                                    "try { json = pm.response.json(); } catch (e) { pm.test('Response is valid JSON', () => { throw e; }); }",
+                                    "pm.test('Response has expected shape', function () {",
+                                    "  pm.expect(json).to.be.an('object');",
+                                    "  pm.expect(json).to.have.property('success');",
+                                    "  const stats = json.data || json.stats || json;",
+                                    "  pm.expect(stats).to.be.ok;",
+                                    "});",
+                                    "// Save common metrics to environment for follow-up debugging",
+                                    "const stats = json.data || json.stats || json;",
+                                    "if (stats) {",
+                                    "  if (typeof stats.total_agents !== 'undefined') pm.environment.set('queue_total_agents', stats.total_agents);",
+                                    "  if (typeof stats.total_active_chats !== 'undefined') pm.environment.set('queue_total_active_chats', stats.total_active_chats);",
+                                    "  if (typeof stats.online_agents !== 'undefined') pm.environment.set('queue_online_agents', stats.online_agents);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get My Workload",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/agent/{{agent_id}}/workload",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "agent",
+                                "{{agent_id}}",
+                                "workload"
+                            ]
+                        },
+                        "description": "Get current workload for a specific agent (use {{agent_id}})."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Agent Availability",
+            "item": [
+                {
+                    "name": "Get My Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/agent-availability/my-status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "agent-availability",
+                                "my-status"
+                            ]
+                        },
+                        "description": "Get agent's current availability, max chats and workload info."
+                    }
+                },
+                {
+                    "name": "Update My Status",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \n  \"availability_status\": \"online\" \n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/agent-availability/my-status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "agent-availability",
+                                "my-status"
+                            ]
+                        },
+                        "description": "Update agent availability (online/offline/busy/away)."
+                    }
+                },
+                {
+                    "name": "Update My Max Concurrent Chats",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \n  \"max_concurrent_chats\": 3 \n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/agent-availability/my-max-chats",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "agent-availability",
+                                "my-max-chats"
+                            ]
+                        },
+                        "description": "Update the maximum concurrent chats this agent can handle (1-20)."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Canned Responses",
+            "item": [
+                {
+                    "name": "Get All Canned Responses",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/canned-responses",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "canned-responses"
+                            ]
+                        },
+                        "description": "Retrieve shared and own canned responses."
+                    }
+                },
+                {
+                    "name": "Create Canned Response",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Greeting\",\n  \"content\": \"Hello {{customer_name}}, how can I assist?\",\n  \"is_shared\": false,\n  \"shortcut\": \"/greet\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/canned-responses",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "canned-responses"
+                            ]
+                        },
+                        "description": "Create a canned response (agents only)."
+                    }
+                },
+                {
+                    "name": "Use Canned Response (send as message)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{agent_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \n  \"session_id\": {{session_id}}, \n  \"variables\": { \"customer_name\": \"John\" } \n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/canned-responses/{{canned_response_id}}/use",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "canned-responses",
+                                "{{canned_response_id}}",
+                                "use"
+                            ]
+                        },
+                        "description": "Use a canned response and post it as a chat message for the session. Requires `canned_response_id` and `session_id`."
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "agent_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "agent_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "session_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "agent_id_to_transfer_to",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "canned_response_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

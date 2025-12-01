@@ -1,0 +1,426 @@
+{
+	"info": {
+		"_postman_id": "phase3-ticketing",
+		"name": "Phase 3 - Ticketing System",
+		"description": "Phase 3: Ticket Management, Categories, Messages, and Attachments",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Ticket Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/ticket-categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ticket-categories"]
+						},
+						"description": "Get all ticket categories (public endpoint)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Technical Support\",\n    \"description\": \"Technical issues and support\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ticket-categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ticket-categories"]
+						},
+						"description": "Create new ticket category (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Technical Support Updated\",\n    \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/ticket-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ticket-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Update ticket category (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/ticket-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "ticket-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Delete ticket category (Admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tickets",
+			"item": [
+				{
+					"name": "Create Ticket (Customer)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"ticket_id\", jsonData.ticket.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subject\": \"Need help with login\",\n    \"description\": \"I cannot login to my account\",\n    \"category_id\": 1,\n    \"priority\": \"high\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/tickets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets"]
+						},
+						"description": "Create a new ticket (Customer only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Tickets (Customer)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/tickets/my-tickets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets", "my-tickets"]
+						},
+						"description": "Get all tickets for current customer"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Ticket Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/tickets/:ticket_id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets", ":ticket_id"],
+							"variable": [
+								{
+									"key": "ticket_id",
+									"value": "{{ticket_id}}"
+								}
+							]
+						},
+						"description": "Get ticket details with messages (Customer/Agent/Admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tickets by Category (Agent/Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/tickets/category/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets", "category", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get tickets by category (Agent/Admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tickets (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/tickets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets"]
+						},
+						"description": "Get all tickets in system (Admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ticket Messages",
+			"item": [
+				{
+					"name": "Add Message to Ticket",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"message_id\", jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Thank you for your help! @agent1 can you check this?\",\n    \"internal_note\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/tickets/:ticket_id/message",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets", ":ticket_id", "message"],
+							"variable": [
+								{
+									"key": "ticket_id",
+									"value": "{{ticket_id}}"
+								}
+							]
+						},
+						"description": "Add message to ticket (Customer/Agent) - Supports @mentions"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Internal Note (Agent)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Internal note: Customer needs urgent help\",\n    \"internal_note\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/tickets/:ticket_id/message",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets", ":ticket_id", "message"],
+							"variable": [
+								{
+									"key": "ticket_id",
+									"value": "{{ticket_id}}"
+								}
+							]
+						},
+						"description": "Add internal note to ticket (Agent only - not visible to customer)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ticket Attachments",
+			"item": [
+				{
+					"name": "Upload Attachment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/tickets/:ticket_id/message/:message_id/attachment",
+							"host": ["{{base_url}}"],
+							"path": ["api", "tickets", ":ticket_id", "message", ":message_id", "attachment"],
+							"variable": [
+								{
+									"key": "ticket_id",
+									"value": "{{ticket_id}}"
+								},
+								{
+									"key": "message_id",
+									"value": "{{message_id}}"
+								}
+							]
+						},
+						"description": "Upload file attachment to ticket message"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "customer_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "agent_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ticket_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "message_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "category_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
+

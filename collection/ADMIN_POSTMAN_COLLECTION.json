@@ -1,0 +1,508 @@
+{
+    "info": {
+        "_postman_id": "admin-flow-collection",
+        "name": "Admin - KB & Management Flow",
+        "description": "Postman collection for Admin flows: login, manage KB categories/articles, manage agents, view/assign live-chat sessions and run queue operations.\n\nUsage notes:\n- Set `base_url` (e.g., http://localhost:5000).\n- Use Admin Login request to obtain `admin_token`.\n- Add `Authorization: Bearer {{admin_token}}` to protected requests.\n- Some realtime actions (accepting sessions) are done via Socket.IO; admin REST endpoints include assign/transfer and overview endpoints.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Admin Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"admin\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login as admin. On success the test will save `admin_token` and `admin_id` to environment."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "  const json = pm.response.json();",
+                                    "  if (json.token) pm.environment.set('admin_token', json.token);",
+                                    "  if (json.admin && json.admin.id) pm.environment.set('admin_id', json.admin.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "KB Categories (Admin)",
+            "item": [
+                {
+                    "name": "Create Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Getting Started\",\n  \"description\": \"Onboarding guides\",\n  \"is_active\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "categories"
+                            ]
+                        },
+                        "description": "Create a KB category. Test saves `kb_category_id` from response `data.id`."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) { var json = pm.response.json(); if (json.data && json.data.id) pm.environment.set('kb_category_id', json.data.id); }"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get All Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "categories"
+                            ]
+                        },
+                        "description": "List all categories (admin)."
+                    }
+                },
+                {
+                    "name": "Update Category",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Getting Started Updated\",\n  \"description\": \"Updated description\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/categories/{{kb_category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "categories",
+                                "{{kb_category_id}}"
+                            ]
+                        },
+                        "description": "Update category with id `kb_category_id`."
+                    }
+                },
+                {
+                    "name": "Delete Category",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/categories/{{kb_category_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "categories",
+                                "{{kb_category_id}}"
+                            ]
+                        },
+                        "description": "Delete category by id."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "KB Articles (Admin)",
+            "item": [
+                {
+                    "name": "Create Article",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"category_id\": {{kb_category_id}},\n  \"title\": \"How to Reset Password\",\n  \"summary\": \"Steps to reset your password\",\n  \"content_html\": \"<p>Step 1...</p>\",\n  \"content_delta\": null,\n  \"visibility\": \"public\",\n  \"status\": \"published\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/articles",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "articles"
+                            ]
+                        },
+                        "description": "Create KB article. Test saves `kb_article_id` from response `data.id`."
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) { var json = pm.response.json(); if (json.data && json.data.id) pm.environment.set('kb_article_id', json.data.id); }"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Update Article",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"title\": \"Updated title\" }"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/articles/{{kb_article_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "articles",
+                                "{{kb_article_id}}"
+                            ]
+                        },
+                        "description": "Update KB article."
+                    }
+                },
+                {
+                    "name": "Delete Article",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/articles/{{kb_article_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "articles",
+                                "{{kb_article_id}}"
+                            ]
+                        },
+                        "description": "Delete KB article."
+                    }
+                },
+                {
+                    "name": "Get Article History",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/kb/articles/{{kb_article_id}}/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "kb",
+                                "articles",
+                                "{{kb_article_id}}",
+                                "history"
+                            ]
+                        },
+                        "description": "Get version history for an article."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Agent Management (Admin)",
+            "item": [
+                {
+                    "name": "Get All Agents Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/agent-availability/all-agents",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "agent-availability",
+                                "all-agents"
+                            ]
+                        },
+                        "description": "Get list of agents with workload and status."
+                    }
+                },
+                {
+                    "name": "Update Agent Status (Admin override)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"availability_status\": \"offline\" }"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/agent-availability/agent/{{agent_id}}/status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "agent-availability",
+                                "agent",
+                                "{{agent_id}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Admin can override a specific agent's status."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Live Chat - Admin",
+            "item": [
+                {
+                    "name": "Get All Sessions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/admin/all-sessions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "admin",
+                                "all-sessions"
+                            ]
+                        },
+                        "description": "Admin: list all sessions."
+                    }
+                },
+                {
+                    "name": "Assign Session to Agent (Manual)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"agent_id\": {{agent_id}} }"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/{{session_id}}/assign",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "{{session_id}}",
+                                "assign"
+                            ]
+                        },
+                        "description": "Assign a pending session to an agent (admin)."
+                    }
+                },
+                {
+                    "name": "Get All Agents Workload",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/live-chat/admin/agents-workload",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "live-chat",
+                                "admin",
+                                "agents-workload"
+                            ]
+                        },
+                        "description": "Admin: get workload summary for agents."
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "admin_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "admin_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "kb_category_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "kb_article_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "agent_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "session_id",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

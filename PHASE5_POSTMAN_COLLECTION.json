@@ -1,0 +1,831 @@
+{
+	"info": {
+		"_postman_id": "phase5-helpdesk-livechat",
+		"name": "Phase 5 - Live Chat System API",
+		"description": "Complete API collection for Phase 5: Live Chat System, Agent Availability, Canned Responses, File Sharing, Routing & Queue Management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Agent Availability",
+			"item": [
+				{
+					"name": "Update My Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"availability_status\": \"online\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/agent-availability/my-status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "agent-availability", "my-status"]
+						},
+						"description": "Agent updates their availability status (online, offline, busy, away)"
+					}
+				},
+				{
+					"name": "Get My Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/agent-availability/my-status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "agent-availability", "my-status"]
+						},
+						"description": "Get agent's current status and workload"
+					}
+				},
+				{
+					"name": "Update Max Concurrent Chats",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"max_concurrent_chats\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/agent-availability/my-max-chats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "agent-availability", "my-max-chats"]
+						},
+						"description": "Update maximum concurrent chats (1-20)"
+					}
+				},
+				{
+					"name": "Update My Skills",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"skills\": [\"technical\", \"billing\", \"sales\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/agent-availability/my-skills",
+							"host": ["{{base_url}}"],
+							"path": ["api", "agent-availability", "my-skills"]
+						},
+						"description": "Update agent's skills array"
+					}
+				},
+				{
+					"name": "Get All Agents Status (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/agent-availability/all-agents",
+							"host": ["{{base_url}}"],
+							"path": ["api", "agent-availability", "all-agents"]
+						},
+						"description": "Admin: Get all agents' status and workload"
+					}
+				},
+				{
+					"name": "Update Agent Status (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"availability_status\": \"online\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/agent-availability/agent/:agent_id/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "agent-availability", "agent", ":agent_id", "status"],
+							"variable": [
+								{
+									"key": "agent_id",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Admin: Manually update agent status"
+					}
+				},
+				{
+					"name": "Update Agent Skills (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"skills\": [\"technical\", \"support\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/agent-availability/agent/:agent_id/skills",
+							"host": ["{{base_url}}"],
+							"path": ["api", "agent-availability", "agent", ":agent_id", "skills"],
+							"variable": [
+								{
+									"key": "agent_id",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Admin: Update agent's skills"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Live Chat Sessions",
+			"item": [
+				{
+					"name": "Start Chat Session (Customer)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subject\": \"Need help with my account\",\n    \"priority\": \"medium\",\n    \"required_skills\": [\"technical\"],\n    \"metadata\": {\n        \"browser\": \"Chrome\",\n        \"page_url\": \"https://example.com/help\",\n        \"referrer\": \"https://example.com\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/start",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", "start"]
+						},
+						"description": "Customer starts a new chat session. Chat will be created with status 'pending' - agent must manually accept."
+					}
+				},
+				{
+					"name": "Get My Sessions (Customer)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/my-sessions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", "my-sessions"]
+						},
+						"description": "Customer gets all their chat sessions"
+					}
+				},
+				{
+					"name": "Get Agent Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/agent/sessions?status=pending",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", "agent", "sessions"],
+							"query": [
+								{
+									"key": "status",
+									"value": "pending",
+									"description": "pending, active, or closed"
+								}
+							]
+						},
+						"description": "Agent gets assigned or pending sessions"
+					}
+				},
+				{
+					"name": "Get All Sessions (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/admin/all-sessions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", "admin", "all-sessions"]
+						},
+						"description": "Admin gets all chat sessions"
+					}
+				},
+				{
+					"name": "Get Session Messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/:id/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", ":id", "messages"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get all messages for a chat session"
+					}
+				},
+				{
+					"name": "Get Customer Context",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/:id/customer-context",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", ":id", "customer-context"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get customer context for a chat session"
+					}
+				},
+				{
+					"name": "Convert Chat to Ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/:id/convert-to-ticket",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", ":id", "convert-to-ticket"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Convert chat session to ticket"
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Queue Management",
+			"item": [
+				{
+					"name": "Get Queue Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/queue/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", "queue", "stats"]
+						},
+						"description": "Get queue statistics (pending chats)"
+					}
+				},
+				{
+					"name": "Manually Assign Chat (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"agent_id\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/:id/assign",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", ":id", "assign"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Admin: Manually assign chat to specific agent"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Chat Transfer & Workload",
+			"item": [
+				{
+					"name": "Transfer Chat",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"to_agent_id\": 3,\n    \"reason\": \"Need technical specialist\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/:id/transfer",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", ":id", "transfer"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Transfer chat to another agent"
+					}
+				},
+				{
+					"name": "Get Agent Workload",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/agent/:agent_id/workload",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", "agent", ":agent_id", "workload"],
+							"variable": [
+								{
+									"key": "agent_id",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Get agent's workload statistics"
+					}
+				},
+				{
+					"name": "Get All Agents Workload (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/live-chat/admin/agents-workload",
+							"host": ["{{base_url}}"],
+							"path": ["api", "live-chat", "admin", "agents-workload"]
+						},
+						"description": "Admin: Get workload for all agents"
+					}
+				}
+			]
+		},
+		{
+			"name": "5. File Upload",
+			"item": [
+				{
+					"name": "Upload Chat File",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "session_id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/chat-upload/upload",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat-upload", "upload"]
+						},
+						"description": "Upload file for chat (images, PDFs, documents - max 10MB)"
+					}
+				},
+				{
+					"name": "Get File Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/chat-upload/file/:filename",
+							"host": ["{{base_url}}"],
+							"path": ["api", "chat-upload", "file", ":filename"],
+							"variable": [
+								{
+									"key": "filename",
+									"value": "example-1234567890.jpg"
+								}
+							]
+						},
+						"description": "Get file information"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Canned Responses",
+			"item": [
+				{
+					"name": "Get All Canned Responses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses?category=greeting&search=hello",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses"],
+							"query": [
+								{
+									"key": "category",
+									"value": "greeting",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "hello",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all canned responses (shared + own), with optional category/search filters"
+					}
+				},
+				{
+					"name": "Get Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses/categories",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses", "categories"]
+						},
+						"description": "Get all categories"
+					}
+				},
+				{
+					"name": "Get by Shortcut",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses/shortcut/:shortcut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses", "shortcut", ":shortcut"],
+							"variable": [
+								{
+									"key": "shortcut",
+									"value": "greeting"
+								}
+							]
+						},
+						"description": "Get canned response by shortcut key"
+					}
+				},
+				{
+					"name": "Get Single Canned Response",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get single canned response by ID"
+					}
+				},
+				{
+					"name": "Create Canned Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Greeting Message\",\n    \"content\": \"Hello {{customer_name}}, thank you for contacting us. How can I assist you today?\",\n    \"category\": \"greeting\",\n    \"shortcut_key\": \"greeting\",\n    \"is_shared\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses"]
+						},
+						"description": "Create new canned response (supports variables like {{customer_name}})"
+					}
+				},
+				{
+					"name": "Update Canned Response",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Greeting\",\n    \"content\": \"Hi {{customer_name}}, welcome! How may I help?\",\n    \"category\": \"greeting\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Update canned response (only creator can update)"
+					}
+				},
+				{
+					"name": "Delete Canned Response",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Delete canned response (only creator can delete)"
+					}
+				},
+				{
+					"name": "Use Canned Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{agent_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variables\": {\n        \"customer_name\": \"John Doe\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/canned-responses/:id/use",
+							"host": ["{{base_url}}"],
+							"path": ["api", "canned-responses", ":id", "use"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Use canned response with variable substitution"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "customer_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "agent_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

@@ -1,0 +1,382 @@
+{
+	"info": {
+		"_postman_id": "auth-helpdesk-collection",
+		"name": "Authentication API - Registration & Login",
+		"description": "Complete authentication API collection for Customer, Agent, and Admin registration and login",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Customer Registration",
+			"item": [
+				{
+					"name": "Step 1: Send OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.message === 'OTP sent successfully') {",
+									"    pm.environment.set('customer_email', pm.request.body.urlencoded.get('email'));",
+									"    pm.test('OTP sent successfully', () => {",
+									"        pm.expect(res.message).to.include('OTP sent');",
+									"    });",
+									"}",
+									"",
+									"// Note: Check your email for OTP code"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"customer@example.com\",\n    \"password\": \"CustomerPassword123!\",\n    \"role\": \"customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register/send-otp",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register", "send-otp"]
+						},
+						"description": "Step 1: Send OTP to customer email for registration verification"
+					}
+				},
+				{
+					"name": "Step 2: Verify OTP & Create Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.message === 'Account created successfully') {",
+									"    pm.test('Account created', () => {",
+									"        pm.expect(res.user).to.have.property('id');",
+									"        pm.expect(res.user.role).to.eql('customer');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"customer@example.com\",\n    \"password\": \"CustomerPassword123!\",\n    \"role\": \"customer\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register", "verify-otp"]
+						},
+						"description": "Step 2: Verify OTP code received via email and create customer account. Replace '123456' with actual OTP from email."
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Agent Registration",
+			"item": [
+				{
+					"name": "Step 1: Send OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.message === 'OTP sent successfully') {",
+									"    pm.environment.set('agent_email', pm.request.body.urlencoded.get('email'));",
+									"    pm.test('OTP sent successfully', () => {",
+									"        pm.expect(res.message).to.include('OTP sent');",
+									"    });",
+									"}",
+									"",
+									"// Note: Check your email for OTP code"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"email\": \"agent@example.com\",\n    \"password\": \"AgentPassword123!\",\n    \"role\": \"agent\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register/send-otp",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register", "send-otp"]
+						},
+						"description": "Step 1: Send OTP to agent email for registration verification"
+					}
+				},
+				{
+					"name": "Step 2: Verify OTP & Create Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.message === 'Account created successfully') {",
+									"    pm.test('Account created', () => {",
+									"        pm.expect(res.user).to.have.property('id');",
+									"        pm.expect(res.user.role).to.eql('agent');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"email\": \"agent@example.com\",\n    \"password\": \"AgentPassword123!\",\n    \"role\": \"agent\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register", "verify-otp"]
+						},
+						"description": "Step 2: Verify OTP code received via email and create agent account. Replace '123456' with actual OTP from email."
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Login",
+			"item": [
+				{
+					"name": "Customer Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.token) {",
+									"    pm.environment.set('customer_token', res.token);",
+									"    pm.test('Login successful', () => {",
+									"        pm.expect(res.token).to.be.a('string');",
+									"        pm.expect(res.user.role).to.eql('customer');",
+									"    });",
+									"} else {",
+									"    pm.test('Login failed', () => {",
+									"        pm.expect(res.token).to.exist;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"customer@example.com\",\n    \"password\": \"CustomerPassword123!\",\n    \"role\": \"customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login as customer. Token will be automatically saved to 'customer_token' environment variable."
+					}
+				},
+				{
+					"name": "Agent Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.token) {",
+									"    pm.environment.set('agent_token', res.token);",
+									"    pm.test('Login successful', () => {",
+									"        pm.expect(res.token).to.be.a('string');",
+									"        pm.expect(res.user.role).to.eql('agent');",
+									"    });",
+									"} else {",
+									"    pm.test('Login failed', () => {",
+									"        pm.expect(res.token).to.exist;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"agent@example.com\",\n    \"password\": \"AgentPassword123!\",\n    \"role\": \"agent\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login as agent. Token will be automatically saved to 'agent_token' environment variable."
+					}
+				},
+				{
+					"name": "Admin Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.token) {",
+									"    pm.environment.set('admin_token', res.token);",
+									"    pm.test('Login successful', () => {",
+									"        pm.expect(res.token).to.be.a('string');",
+									"        pm.expect(res.admin.role).to.eql('admin');",
+									"    });",
+									"} else {",
+									"    pm.test('Login failed', () => {",
+									"        pm.expect(res.token).to.exist;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"Password123!\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login as admin. Token will be automatically saved to 'admin_token' environment variable.\n\n**Note:** Admin account must be created first using the create_admin.js script:\n```bash\nnode create_admin.js\n```\n\nDefault admin credentials (if using .env defaults):\n- Email: admin@example.com\n- Password: Password123!"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Profile",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{customer_token}}",
+								"type": "text",
+								"description": "Use customer_token, agent_token, or admin_token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "profile"]
+						},
+						"description": "Get current user profile. Requires authentication token."
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "customer_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "agent_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "agent_email",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

@@ -1,0 +1,104 @@
+{
+    "info": {
+        "_postman_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+        "name": "Helpdesk API - Basic Tests",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth - Login",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "{{baseUrl}}/api/auth/login",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"email\": \"agent@example.com\",\n  \"password\": \"AgentPassword123\"\n}"
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "const res = pm.response.json();",
+                            "if (res.token) {",
+                            "  pm.environment.set('authToken', res.token);",
+                            "  pm.test('Token saved to environment', () => pm.expect(res.token).to.be.a('string'));",
+                            "} else {",
+                            "  pm.test('Login returned token', () => pm.expect(res.token).to.exist);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Auth - Profile (protected)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    }
+                ],
+                "url": "{{baseUrl}}/api/auth/profile"
+            },
+            "response": []
+        },
+        {
+            "name": "Tickets - Create Ticket",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    }
+                ],
+                "url": "{{baseUrl}}/api/tickets",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"subject\": \"Example issue from Postman\",\n  \"description\": \"This is a test ticket created via Postman.\",\n  \"category_id\": 1,\n  \"priority\": \"high\"\n}"
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Tickets - Get My Tickets",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    }
+                ],
+                "url": "{{baseUrl}}/api/tickets/my-tickets"
+            },
+            "response": []
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000"
+        },
+        {
+            "key": "authToken",
+            "value": ""
+        }
+    ]
+}
