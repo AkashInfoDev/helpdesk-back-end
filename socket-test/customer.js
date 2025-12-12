@@ -7,7 +7,7 @@ const CUSTOMER_TOKEN = "YOUR_CUSTOMER_TOKEN_HERE";
 const socket = io("http://localhost:5000", {
   auth: {
     token:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiZW1haWwiOiJhYXNoaXNoMUBnbWFpbC5jb20iLCJyb2xlIjozLCJyb2xlX25hbWUiOiJjdXN0b21lciIsImlhdCI6MTc2NDU4OTU5NiwiZXhwIjoxNzY0Njc1OTk2fQ.fsiYmn1gi_R_nFtBYwkw_O-Nl55fE09tMCn4Xbenf7E",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTEsImVtYWlsIjoib21AZ21haWwuY29tIiwicm9sZSI6Mywicm9sZV9uYW1lIjoiY3VzdG9tZXIiLCJpYXQiOjE3NjU1NDA1MjQsImV4cCI6MTc2NTYyNjkyNH0.lKNIA_Gf-cXoAu-bZo3h7SEFj8T-smEx7NvWMY7EZk0",
   },
 });
 

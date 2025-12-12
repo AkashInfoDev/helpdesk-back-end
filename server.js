@@ -50,7 +50,9 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
 // Serve uploads folder
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static("uploads"));
+
 
 // --------------------------------------
 // Database

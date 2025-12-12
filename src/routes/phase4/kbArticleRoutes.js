@@ -7,6 +7,7 @@ const kbArticleController = require("../../controllers/phase4/kbArticleControlle
 
 const authMiddleware = require("../../middleware/authMiddleware");
 const roleMiddleware = require("../../middleware/roleMiddleware");
+const upload = require("../../middleware/kbUpload");
 
 // -------------------------------------------------------------
 // SEARCH ARTICLES (multi-role search rules inside controller)
@@ -16,6 +17,17 @@ router.get(
     authMiddleware, // all roles use search: admin, agent, customer
     kbArticleController.searchArticles
 );
+
+// -------------------------------------------------------------
+// ADMIN: Get ALL articles (no restrictions)
+// -------------------------------------------------------------
+router.get(
+    "/admin/all",
+    authMiddleware,
+    roleMiddleware("admin"),
+    kbArticleController.getAllArticlesForAdmin
+);
+
 
 // -------------------------------------------------------------
 // GET ARTICLE BY ID (role-based visibility handled in controller)
@@ -33,6 +45,7 @@ router.post(
     "/",
     authMiddleware,
     roleMiddleware("admin"),
+    upload.single("image"),
     kbArticleController.createArticle
 );
 
@@ -43,6 +56,7 @@ router.put(
     "/:id",
     authMiddleware,
     roleMiddleware("admin"),
+    upload.single("image"),
     kbArticleController.updateArticle
 );
 
@@ -74,5 +88,8 @@ router.get(
     roleMiddleware("admin", "agent"),
     kbArticleController.getHistory
 );
+
+router.get("/public/articles", kbArticleController.getPublicArticles);
+router.get("/public/articles/:slug", kbArticleController.getPublicArticleBySlug);
 
 module.exports = router;
