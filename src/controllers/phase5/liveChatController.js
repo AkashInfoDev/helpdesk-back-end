@@ -81,14 +81,81 @@ async function getCustomerContext(customerId) {
 // ----------------------------------------
 // CUSTOMER: Start New Live Chat Session
 // ----------------------------------------
+// exports.startSession = async (req, res) => {
+//     try {
+//         const { subject, metadata, priority, required_skills, category_id } = req.body;
+
+//         // Get customer context/preload data
+//         const customerContext = await getCustomerContext(req.user.id);
+
+//         // Build enhanced metadata with customer preload
+//         const enhancedMetadata = {
+//             ...(metadata || {}),
+//             customer_preload: {
+//                 customer_name: req.user.name,
+//                 customer_email: req.user.email,
+//                 previous_tickets_count: customerContext?.previous_tickets_count || 0,
+//                 previous_chats_count: customerContext?.previous_chats_count || 0,
+//                 account_status: customerContext?.account_status || "active",
+//                 account_age_days: customerContext?.customer?.account_age_days || 0,
+//                 browser_info: metadata?.browser || null,
+//                 page_url: metadata?.page_url || null,
+//                 referrer: metadata?.referrer || null,
+//                 ip_address: req.ip || null,
+//                 user_agent: req.get('user-agent') || null
+//             }
+//         };
+
+//         // Create session as pending - agent will manually accept
+//         const sessionData = {
+//             customer_id: req.user.id,
+//             subject,
+//             metadata: enhancedMetadata,
+//             priority: priority || "medium",
+//             required_skills: required_skills || null,
+//             status: "pending", // Always start as pending - no auto-assignment
+//             started_at: new Date()
+//         };
+
+//         const session = await LiveChatSession.create(sessionData);
+
+//         return res.json({
+//             success: true,
+//             session,
+//             message: "Chat session created. Waiting for agent to accept.",
+//             customer_context: customerContext
+//         });
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ message: "Failed to start session" });
+//     }
+// };
 exports.startSession = async (req, res) => {
     try {
-        const { subject, metadata, priority, required_skills } = req.body;
+        const {
+            subject,
+            metadata,
+            priority,
+            required_skills,
+            category_id
+        } = req.body;
 
-        // Get customer context/preload data
+        let category = null;
+
+        // 🧠 Validate category ONLY if provided
+        if (category_id) {
+            category = await TicketCategory.findByPk(category_id);
+            if (!category) {
+                return res.status(400).json({
+                    message: "Invalid category_id"
+                });
+            }
+        }
+
+        // 📊 Get customer context / preload data
         const customerContext = await getCustomerContext(req.user.id);
 
-        // Build enhanced metadata with customer preload
+        // 🧩 Build enhanced metadata
         const enhancedMetadata = {
             ...(metadata || {}),
             customer_preload: {
@@ -102,18 +169,19 @@ exports.startSession = async (req, res) => {
                 page_url: metadata?.page_url || null,
                 referrer: metadata?.referrer || null,
                 ip_address: req.ip || null,
-                user_agent: req.get('user-agent') || null
+                user_agent: req.get("user-agent") || null
             }
         };
 
-        // Create session as pending - agent will manually accept
+        // 🧾 Create chat session (PENDING)
         const sessionData = {
             customer_id: req.user.id,
             subject,
+            category_id: category_id || null, // ✅ OPTIONAL
             metadata: enhancedMetadata,
             priority: priority || "medium",
             required_skills: required_skills || null,
-            status: "pending", // Always start as pending - no auto-assignment
+            status: "pending",
             started_at: new Date()
         };
 
@@ -121,13 +189,19 @@ exports.startSession = async (req, res) => {
 
         return res.json({
             success: true,
-            session,
             message: "Chat session created. Waiting for agent to accept.",
+            session,
+            category: category
+                ? { id: category.id, name: category.name }
+                : null,
             customer_context: customerContext
         });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to start session" });
+        console.error("Start Session Error:", err);
+        res.status(500).json({
+            message: "Failed to start session"
+        });
     }
 };
 

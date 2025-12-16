@@ -76,6 +76,15 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: null,
             comment: "Array of transfer records: [{from_agent_id, to_agent_id, transferred_at, reason}]",
         }
+        ,
+        category_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,      // ✅ MUST be true
+            defaultValue: null,
+            comment: "Optional ticket category selected at chat start"
+        }
+
+
     }, {
         tableName: "LiveChatSession",
         timestamps: true,

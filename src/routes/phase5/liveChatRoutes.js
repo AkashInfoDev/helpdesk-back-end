@@ -14,7 +14,6 @@ const {
     getSessionMessages,
     convertToTicket,
     getQueueStats,
-    // autoAssignChats, // DISABLED - Manual assignment only
     manualAssignChat,
     transferChat,
     getAgentWorkload,

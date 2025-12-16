@@ -13,6 +13,13 @@ const {
   replaceVariables,
 } = require("../controllers/phase5/cannedResponseController");
 
+const safeAck = (callback, payload) => {
+  if (typeof callback === "function") {
+    callback(payload);
+  }
+};
+
+
 /**
  * Get Customer Context/Preload Data (for Socket.IO)
  */
@@ -126,67 +133,111 @@ module.exports = (io) => {
     // ------------------------------------------------------
     // CUSTOMER: Start Session (triggered from frontend)
     // ------------------------------------------------------
-    socket.on(
-      "chat:start",
-      async ({ subject, metadata, priority, required_skills }, callback) => {
-        try {
-          // Get customer context/preload data
-          const customerContext = await getCustomerContextForSocket(
-            socket.user.id
-          );
+    // socket.on(
+    //   "chat:start",
+    //   async ({ subject, metadata, priority, required_skills }, callback) => {
+    //     try {
+    //       // Get customer context/preload data
+    //       const customerContext = await getCustomerContextForSocket(
+    //         socket.user.id
+    //       );
 
-          // Build enhanced metadata with customer preload
-          const enhancedMetadata = {
-            ...(metadata || {}),
-            customer_preload: {
-              customer_name: socket.user.name || socket.user.email,
-              customer_email: socket.user.email,
-              previous_tickets_count:
-                customerContext?.previous_tickets_count || 0,
-              previous_chats_count:
-                customerContext?.previous_chats_count || 0,
-              account_status:
-                customerContext?.account_status || "active",
-              account_age_days:
-                customerContext?.customer?.account_age_days || 0,
-              browser_info: metadata?.browser || null,
-              page_url: metadata?.page_url || null,
-              referrer: metadata?.referrer || null,
-              user_agent: metadata?.user_agent || null,
-            },
-          };
+    //       // Build enhanced metadata with customer preload
+    //       const enhancedMetadata = {
+    //         ...(metadata || {}),
+    //         customer_preload: {
+    //           customer_name: socket.user.name || socket.user.email,
+    //           customer_email: socket.user.email,
+    //           previous_tickets_count:
+    //             customerContext?.previous_tickets_count || 0,
+    //           previous_chats_count:
+    //             customerContext?.previous_chats_count || 0,
+    //           account_status:
+    //             customerContext?.account_status || "active",
+    //           account_age_days:
+    //             customerContext?.customer?.account_age_days || 0,
+    //           browser_info: metadata?.browser || null,
+    //           page_url: metadata?.page_url || null,
+    //           referrer: metadata?.referrer || null,
+    //           user_agent: metadata?.user_agent || null,
+    //         },
+    //       };
 
-          // Create session as pending - agent will manually accept
-          const sessionData = {
-            customer_id: socket.user.id,
-            subject,
-            metadata: enhancedMetadata,
-            priority: priority || "medium",
-            required_skills: required_skills || null,
-            status: "pending", // Always start as pending - no auto-assignment
-            started_at: new Date(),
-          };
+    //       // Create session as pending - agent will manually accept
+    //       const sessionData = {
+    //         customer_id: socket.user.id,
+    //         subject,
+    //         metadata: enhancedMetadata,
+    //         priority: priority || "medium",
+    //         required_skills: required_skills || null,
+    //         status: "pending", // Always start as pending - no auto-assignment
+    //         started_at: new Date(),
+    //       };
 
-          const session = await LiveChatSession.create(sessionData);
+    //       const session = await LiveChatSession.create(sessionData);
 
-          const room = `session_${session.id}`;
-          socket.join(room);
+    //       const room = `session_${session.id}`;
+    //       socket.join(room);
 
-          // Notify all online agents about new pending session
-          io.emit("chat:new_session", session);
+    //       // Notify all online agents about new pending session
+    //       io.emit("chat:new_session", session);
 
-          callback({
-            success: true,
-            session,
-            message: "Chat session created. Waiting for agent to accept.",
-            customer_context: customerContext,
-          });
-        } catch (err) {
-          console.error(err);
-          callback({ success: false, message: "Failed to start session" });
-        }
+    //       callback({
+    //         success: true,
+    //         session,
+    //         message: "Chat session created. Waiting for agent to accept.",
+    //         customer_context: customerContext,
+    //       });
+    //     } catch (err) {
+    //       console.error(err);
+    //       callback({ success: false, message: "Failed to start session" });
+    //     }
+    //   }
+    // );
+    socket.on("chat:start", async ({ subject, metadata, priority, required_skills }, callback) => {
+      try {
+        const customerContext = await getCustomerContextForSocket(socket.user.id);
+
+        const enhancedMetadata = {
+          ...(metadata || {}),
+          customer_preload: {
+            customer_name: socket.user.name || socket.user.email,
+            customer_email: socket.user.email,
+            previous_tickets_count: customerContext?.previous_tickets_count || 0,
+            previous_chats_count: customerContext?.previous_chats_count || 0,
+            account_status: customerContext?.account_status || "active",
+            account_age_days: customerContext?.customer?.account_age_days || 0,
+            browser_info: metadata?.browser || null,
+            page_url: metadata?.page_url || null,
+            referrer: metadata?.referrer || null,
+            user_agent: metadata?.user_agent || null,
+          },
+        };
+
+        const session = await LiveChatSession.create({
+          customer_id: socket.user.id,
+          subject,
+          metadata: enhancedMetadata,
+          priority: priority || "medium",
+          required_skills: required_skills || null,
+          status: "pending",
+          started_at: new Date(),
+        });
+
+        socket.join(`session_${session.id}`);
+        io.emit("chat:new_session", session);
+
+        safeAck(callback, {
+          success: true,
+          session,
+          message: "Chat session created. Waiting for agent to accept.",
+          customer_context: customerContext,
+        });
+      } catch (err) {
+        console.error("chat:start error:", err);
+        safeAck(callback, { success: false, message: "Failed to start session" });
       }
-    );
+    });
 
     // ------------------------------------------------------
     // JOIN SESSION ROOM (customer or agent)
@@ -199,34 +250,65 @@ module.exports = (io) => {
     // ------------------------------------------------------
     // AGENT: Accept Session
     // ------------------------------------------------------
+    // socket.on("chat:accept", async ({ session_id }, callback) => {
+    //   try {
+    //     const session = await LiveChatSession.findByPk(session_id);
+
+    //     if (!session)
+    //       return callback({ success: false, message: "Session not found" });
+
+    //     if (session.status !== "pending") {
+    //       return callback({ success: false, message: "Already assigned" });
+    //     }
+
+    //     session.agent_id = socket.user.id;
+    //     session.status = "active";
+    //     session.assigned_at = new Date();
+    //     await session.save();
+
+    //     const room = `session_${session_id}`;
+    //     socket.join(room);
+
+    //     io.to(room).emit("chat:session_assigned", {
+    //       session_id,
+    //       agent_id: socket.user.id,
+    //     });
+
+    //     callback({ success: true });
+    //   } catch (err) {
+    //     console.error(err);
+    //     callback({ success: false });
+    //   }
+    // });
     socket.on("chat:accept", async ({ session_id }, callback) => {
       try {
         const session = await LiveChatSession.findByPk(session_id);
 
-        if (!session)
-          return callback({ success: false, message: "Session not found" });
-
-        if (session.status !== "pending") {
-          return callback({ success: false, message: "Already assigned" });
+        if (!session) {
+          return safeAck(callback, { success: false, message: "Session not found" });
         }
 
-        session.agent_id = socket.user.id;
-        session.status = "active";
-        session.assigned_at = new Date();
-        await session.save();
+        if (session.status !== "pending") {
+          return safeAck(callback, { success: false, message: "Already assigned" });
+        }
 
-        const room = `session_${session_id}`;
-        socket.join(room);
+        await session.update({
+          agent_id: socket.user.id,
+          status: "active",
+          assigned_at: new Date(),
+        });
 
-        io.to(room).emit("chat:session_assigned", {
+        socket.join(`session_${session_id}`);
+
+        io.to(`session_${session_id}`).emit("chat:session_assigned", {
           session_id,
           agent_id: socket.user.id,
         });
 
-        callback({ success: true });
+        safeAck(callback, { success: true });
       } catch (err) {
-        console.error(err);
-        callback({ success: false });
+        console.error("chat:accept error:", err);
+        safeAck(callback, { success: false });
       }
     });
 
@@ -300,7 +382,7 @@ module.exports = (io) => {
         callback({ success: true, message: fullMessage });
       } catch (err) {
         console.error("Send Message Error:", err);
-        callback({ success: false, message: "Failed to send message" });
+        safeAck(callback({ success: false, message: "Failed to send message" }));
       }
     });
 
@@ -392,55 +474,95 @@ module.exports = (io) => {
     // ------------------------------------------------------
     // AGENT: Update Availability Status (Real-time)
     // ------------------------------------------------------
-    socket.on(
-      "agent:update_status",
-      async ({ availability_status }, callback) => {
-        try {
-          // Only agents can update status
-          if (socket.user.role_name !== "agent") {
-            return callback({
-              success: false,
-              message: "Only agents can update status",
-            });
-          }
+    // socket.on(
+    //   "agent:update_status",
+    //   async ({ availability_status }, callback) => {
+    //     try {
+    //       // Only agents can update status
+    //       if (socket.user.role_name !== "agent") {
+    //         return callback({
+    //           success: false,
+    //           message: "Only agents can update status",
+    //         });
+    //       }
 
-          const validStatuses = ["online", "offline", "busy", "away"];
-          if (!validStatuses.includes(availability_status)) {
-            return callback({ success: false, message: "Invalid status" });
-          }
+    //       const validStatuses = ["online", "offline", "busy", "away"];
+    //       if (!validStatuses.includes(availability_status)) {
+    //         return callback({ success: false, message: "Invalid status" });
+    //       }
 
-          await User.update(
-            {
-              availability_status,
-              last_activity_at: new Date(),
-            },
-            { where: { id: socket.user.id } }
-          );
+    //       await User.update(
+    //         {
+    //           availability_status,
+    //           last_activity_at: new Date(),
+    //         },
+    //         { where: { id: socket.user.id } }
+    //       );
 
-          const agent = await User.findByPk(socket.user.id, {
-            attributes: [
-              "id",
-              "name",
-              "email",
-              "availability_status",
-              "last_activity_at",
-            ],
+    //       const agent = await User.findByPk(socket.user.id, {
+    //         attributes: [
+    //           "id",
+    //           "name",
+    //           "email",
+    //           "availability_status",
+    //           "last_activity_at",
+    //         ],
+    //       });
+
+    //       // Broadcast status change to admins and other agents
+    //       io.emit("agent:status_changed", {
+    //         agent_id: socket.user.id,
+    //         agent: agent,
+    //         status: availability_status,
+    //       });
+
+    //       callback({ success: true, agent });
+    //     } catch (err) {
+    //       console.error("Update Status Error:", err);
+    //       callback({ success: false, message: "Failed to update status" });
+    //     }
+    //   }
+    // );
+
+    socket.on("agent:update_status", async ({ availability_status }, callback) => {
+      try {
+        if (socket.user.role_name !== "agent") {
+          return safeAck(callback, {
+            success: false,
+            message: "Only agents can update status",
           });
-
-          // Broadcast status change to admins and other agents
-          io.emit("agent:status_changed", {
-            agent_id: socket.user.id,
-            agent: agent,
-            status: availability_status,
-          });
-
-          callback({ success: true, agent });
-        } catch (err) {
-          console.error("Update Status Error:", err);
-          callback({ success: false, message: "Failed to update status" });
         }
+
+        const validStatuses = ["online", "offline", "busy", "away"];
+        if (!validStatuses.includes(availability_status)) {
+          return safeAck(callback, {
+            success: false,
+            message: "Invalid status",
+          });
+        }
+
+        await User.update(
+          { availability_status, last_activity_at: new Date() },
+          { where: { id: socket.user.id } }
+        );
+
+        const agent = await User.findByPk(socket.user.id, {
+          attributes: ["id", "name", "email", "availability_status", "last_activity_at"],
+        });
+
+        io.emit("agent:status_changed", {
+          agent_id: socket.user.id,
+          agent,
+          status: availability_status,
+        });
+
+        safeAck(callback, { success: true, agent });
+      } catch (err) {
+        console.error("Update Status Error:", err);
+        safeAck(callback, { success: false, message: "Failed to update status" });
       }
-    );
+    });
+
 
     // ------------------------------------------------------
     // AGENT: Activity Ping (for auto-away detection)
@@ -540,7 +662,7 @@ module.exports = (io) => {
         callback({ success: true, agents: agentsWithWorkload });
       } catch (err) {
         console.error("Get All Status Error:", err);
-        callback({ success: false, message: "Failed to get agents status" });
+        safeAck(callback, { success: false, message: "Failed to get agents status" });
       }
     });
 
@@ -616,7 +738,7 @@ module.exports = (io) => {
         });
       } catch (err) {
         console.error("Use Canned Response Error:", err);
-        callback({ success: false, message: "Failed to use canned response" });
+        safeAck(callback, { success: false, message: "Failed to use canned response" });
       }
     });
 
@@ -736,10 +858,10 @@ module.exports = (io) => {
         });
       } catch (err) {
         console.error("Transfer Chat Error:", err);
-        callback({
+        safeAck(callback, ({
           success: false,
           message: "Failed to transfer chat",
-        });
+        }));
       }
     });
 
