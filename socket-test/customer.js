@@ -274,7 +274,7 @@ const fs = require("fs");
 const readline = require("readline");
 
 // 🔐 PASTE CUSTOMER JWT TOKEN HERE
-const CUSTOMER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsImVtYWlsIjoiYWpheTFAZ21haWwuY29tIiwicm9sZSI6Mywicm9sZV9uYW1lIjoiY3VzdG9tZXIiLCJpYXQiOjE3NjU5NjM5NjMsImV4cCI6MTc2NjA1MDM2M30.awD5Z256qM1pOis7TGm1s3qgBfPOVvOfjcvWNUyl41Q";
+const CUSTOMER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIsImVtYWlsIjoidGhvckBnbWFpbC5jb20iLCJyb2xlIjozLCJyb2xlX25hbWUiOiJjdXN0b21lciIsImlhdCI6MTc2NTk2NjkwOSwiZXhwIjoxNzY2MDUzMzA5fQ.nzjihsuSSrxHix_UztewDa5EQ58I8iqsCEMDfqCcGRk";
 
 const socket = io("http://localhost:5000", {
   auth: { token: CUSTOMER_TOKEN },

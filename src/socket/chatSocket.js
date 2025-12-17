@@ -326,44 +326,118 @@ module.exports = (io) => {
     // ------------------------------------------------------
     // SEND MESSAGE
     // ------------------------------------------------------
+    // socket.on("chat:send_message", async (data, callback) => {
+    //   const { session_id, type, content, kb_article_id, attachment_url } = data;
+
+    //   try {
+    //     // Validate session exists and user has access
+    //     const session = await LiveChatSession.findByPk(session_id);
+    //     if (!session) {
+    //       return callback({ success: false, message: "Session not found" });
+    //     }
+
+    //     // Check access
+    //     const isCustomer = session.customer_id === socket.user.id;
+    //     const isAgent = session.agent_id === socket.user.id;
+    //     const isAdmin = socket.user.role_name === "admin";
+
+    //     if (!isCustomer && !isAgent && !isAdmin) {
+    //       return callback({ success: false, message: "Unauthorized" });
+    //     }
+
+    //     // Validate message type and content
+    //     const validTypes = ["text", "file", "kb_article", "system"];
+    //     if (!validTypes.includes(type)) {
+    //       return callback({ success: false, message: "Invalid message type" });
+    //     }
+
+    //     // For file type, attachment_url is required
+    //     if (type === "file" && !attachment_url) {
+    //       return callback({
+    //         success: false,
+    //         message: "File URL required for file messages",
+    //       });
+    //     }
+
+    //     // For text type, content is required
+    //     if (type === "text" && !content) {
+    //       return callback({
+    //         success: false,
+    //         message: "Content required for text messages",
+    //       });
+    //     }
+
+    //     const message = await LiveChatMessage.create({
+    //       session_id,
+    //       sender_id: socket.user.id,
+    //       sender_role: socket.user.role_name,
+    //       type,
+    //       content: content || null,
+    //       attachment_url: attachment_url || null,
+    //       kb_article_id: kb_article_id || null,
+    //     });
+
+    //     // Update last message time
+    //     await LiveChatSession.update(
+    //       { last_message_at: new Date() },
+    //       { where: { id: session_id } }
+    //     );
+
+    //     const fullMessage = await LiveChatMessage.findByPk(message.id, {
+    //       include: [{ model: KBArticle, as: "kb_article" }],
+    //     });
+
+    //     const room = `session_${session_id}`;
+    //     io.to(room).emit("chat:new_message", fullMessage);
+
+    //     safeAck(callback({ success: true, message: fullMessage }));
+    //   } catch (err) {
+    //     console.error("Send Message Error:", err);
+    //     safeAck(callback({ success: false, message: "Failed to send message" }));
+    //   }
+    // });
     socket.on("chat:send_message", async (data, callback) => {
       const { session_id, type, content, kb_article_id, attachment_url } = data;
 
       try {
-        // Validate session exists and user has access
         const session = await LiveChatSession.findByPk(session_id);
         if (!session) {
-          return callback({ success: false, message: "Session not found" });
+          return safeAck(callback, {
+            success: false,
+            message: "Session not found",
+          });
         }
 
-        // Check access
         const isCustomer = session.customer_id === socket.user.id;
         const isAgent = session.agent_id === socket.user.id;
         const isAdmin = socket.user.role_name === "admin";
 
         if (!isCustomer && !isAgent && !isAdmin) {
-          return callback({ success: false, message: "Unauthorized" });
-        }
-
-        // Validate message type and content
-        const validTypes = ["text", "file", "kb_article", "system"];
-        if (!validTypes.includes(type)) {
-          return callback({ success: false, message: "Invalid message type" });
-        }
-
-        // For file type, attachment_url is required
-        if (type === "file" && !attachment_url) {
-          return callback({
+          return safeAck(callback, {
             success: false,
-            message: "File URL required for file messages",
+            message: "Unauthorized",
           });
         }
 
-        // For text type, content is required
-        if (type === "text" && !content) {
-          return callback({
+        const validTypes = ["text", "file", "kb_article", "system"];
+        if (!validTypes.includes(type)) {
+          return safeAck(callback, {
             success: false,
-            message: "Content required for text messages",
+            message: "Invalid message type",
+          });
+        }
+
+        if (type === "file" && !attachment_url) {
+          return safeAck(callback, {
+            success: false,
+            message: "File URL required",
+          });
+        }
+
+        if (type === "text" && !content) {
+          return safeAck(callback, {
+            success: false,
+            message: "Content required",
           });
         }
 
@@ -377,7 +451,6 @@ module.exports = (io) => {
           kb_article_id: kb_article_id || null,
         });
 
-        // Update last message time
         await LiveChatSession.update(
           { last_message_at: new Date() },
           { where: { id: session_id } }
@@ -387,15 +460,21 @@ module.exports = (io) => {
           include: [{ model: KBArticle, as: "kb_article" }],
         });
 
-        const room = `session_${session_id}`;
-        io.to(room).emit("chat:new_message", fullMessage);
+        io.to(`session_${session_id}`).emit("chat:new_message", fullMessage);
 
-        callback({ success: true, message: fullMessage });
+        safeAck(callback, {
+          success: true,
+          message: fullMessage,
+        });
       } catch (err) {
         console.error("Send Message Error:", err);
-        safeAck(callback({ success: false, message: "Failed to send message" }));
+        safeAck(callback, {
+          success: false,
+          message: "Failed to send message",
+        });
       }
     });
+
 
     // ------------------------------------------------------
     // TYPING EVENT

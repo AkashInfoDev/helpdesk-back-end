@@ -146,6 +146,78 @@ exports.uploadChatFile = async (req, res) => {
     }
 };
 
+// exports.uploadChatFile = async (req, res) => {
+//     try {
+//         if (!req.file) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "No file uploaded",
+//             });
+//         }
+
+//         const { session_id } = req.body;
+
+//         if (!session_id) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "session_id is required",
+//             });
+//         }
+
+//         const session = await LiveChatSession.findByPk(session_id);
+
+//         if (!session) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Chat session not found",
+//             });
+//         }
+
+//         // Permission check
+//         const isCustomer = session.customer_id === req.user.id;
+//         const isAgent = session.agent_id === req.user.id;
+//         const isAdmin = req.user.role_name === "admin";
+
+//         if (!isCustomer && !isAgent && !isAdmin) {
+//             return res.status(403).json({
+//                 success: false,
+//                 message: "Unauthorized",
+//             });
+//         }
+
+//         const fileUrl = `/uploads/chat/${req.file.filename}`;
+
+//         // ✅ SAVE MESSAGE
+//         const message = await LiveChatMessage.create({
+//             session_id: session.id,
+//             sender_id: req.user.id,
+//             sender_role: req.user.role_name,
+//             type: "file",
+//             attachment_url: fileUrl,
+//         });
+
+//         await session.update({ last_message_at: new Date() });
+
+//         // ✅ SOCKET IS THE ONLY DELIVERY CHANNEL
+//         const io = req.app.get("io");
+//         io.to(`session_${session.id}`).emit("chat:new_message", message);
+
+//         // ✅ RESPONSE MUST NOT CONTAIN FILE OR MESSAGE
+//         return res.json({
+//             success: true,
+//             message: "File uploaded successfully",
+//         });
+
+//     } catch (err) {
+//         console.error("Chat File Upload Error:", err);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Failed to upload file",
+//         });
+//     }
+// };
+
+
 
 // ----------------------------------------
 // Get File Info (for download/access)
