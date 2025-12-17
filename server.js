@@ -190,6 +190,7 @@ async function startServer() {
             allowEIO3: true // Allow Engine.IO v3 clients
         });
 
+        app.set("io", io);
         // Load Chat Socket Handlers
         const chatSocket = require("./src/socket/chatSocket");
         chatSocket(io);
