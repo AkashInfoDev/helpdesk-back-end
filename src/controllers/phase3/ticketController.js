@@ -1,5 +1,5 @@
 // src/controllers/phase3/ticketController.js
-
+const { Op } = require("sequelize");
 const {
     Ticket,
     TicketCategory,
@@ -171,6 +171,34 @@ exports.getAllTickets = async (req, res) => {
         return res.json(tickets);
     } catch (error) {
         console.error("Get All Tickets Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+
+exports.getMyActiveTickets = async (req, res) => {
+    try {
+        const agent_id = req.user.id;
+
+        const tickets = await Ticket.findAll({
+            where: {
+                agent_id,
+                status: {
+                    [Op.notIn]: ["resolved", "closed"],
+                },
+            },
+            include: [
+                { model: TicketCategory, as: "category" },
+                { model: User, as: "customer", attributes: ["id", "name"] },
+                { model: User, as: "agent", attributes: ["id", "name"] },
+            ],
+            order: [["createdAt", "DESC"]],
+        });
+
+        return res.json(tickets);
+    } catch (error) {
+        console.error("Get My Active Tickets Error:", error);
         return res.status(500).json({ message: "Server Error" });
     }
 };

@@ -28,7 +28,7 @@ const AUTO_ACCEPT = false;
 
 const socket = io("http://localhost:5000", {
   auth: {
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiZW1haWwiOiJBYWthc2hAZ21haWwuY29tIiwicm9sZSI6Miwicm9sZV9uYW1lIjoiYWdlbnQiLCJpYXQiOjE3NjU3ODMxMTcsImV4cCI6MTc2NTg2OTUxN30.hwt4kKBuregcTbj2qghbhZJATcfl0bxaP6nNqHdgYcE",
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OSwiZW1haWwiOiJhamF5QGdtYWlsLmNvbSIsInJvbGUiOjIsInJvbGVfbmFtZSI6ImFnZW50IiwiaWF0IjoxNzY1ODYyNjE1LCJleHAiOjE3NjU5NDkwMTV9.FAa9-PHg3UoMnn0c9eCmKjM8LZe8C0lNu-pAVmKQrq0",
   },
 });
 

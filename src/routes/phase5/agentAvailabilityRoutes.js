@@ -37,7 +37,7 @@ router.get("/my-status", auth, role("agent"), getMyStatus);
 router.get(
   "/all-agents",
   auth,
-  role("admin", "supervisor"),
+  role("admin", "agent"),
   getAllAgentsStatus
 );
 

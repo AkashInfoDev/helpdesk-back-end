@@ -19,6 +19,9 @@ const safeAck = (callback, payload) => {
   }
 };
 
+// Track active sockets per user
+const userSockets = new Map();
+// userId => Set(socket.id)
 
 /**
  * Get Customer Context/Preload Data (for Socket.IO)
@@ -95,6 +98,13 @@ module.exports = (io) => {
     console.log(
       `⚡ User connected → ${socket.user.email} (${socket.user.role_name})`
     );
+
+    const userId = socket.user.id;
+
+    if (!userSockets.has(userId)) {
+      userSockets.set(userId, new Set());
+    }
+    userSockets.get(userId).add(socket.id);
 
     // ------------------------------------------------------
     // AGENT: Set Online Status on Connect
@@ -194,7 +204,7 @@ module.exports = (io) => {
     //     }
     //   }
     // );
-    socket.on("chat:start", async ({ subject, metadata, priority, required_skills }, callback) => {
+    socket.on("chat:start", async ({ subject, metadata, priority, required_skills, category_id }, callback) => {
       try {
         const customerContext = await getCustomerContextForSocket(socket.user.id);
 
@@ -219,6 +229,7 @@ module.exports = (io) => {
           subject,
           metadata: enhancedMetadata,
           priority: priority || "medium",
+          category_id: category_id || null, // ✅ OPTIONAL
           required_skills: required_skills || null,
           status: "pending",
           started_at: new Date(),
@@ -868,34 +879,77 @@ module.exports = (io) => {
     // --------------------------------------------
     // DISCONNECT
     // --------------------------------------------
+    // socket.on("disconnect", async () => {
+    //   console.log(`❌ User disconnected → ${socket.user.email}`);
+
+    //   // If agent disconnects, set status to offline
+    //   if (socket.user.role_name === "agent") {
+    //     try {
+    //       await User.update(
+    //         {
+    //           availability_status: "offline",
+    //           last_activity_at: new Date(),
+    //         },
+    //         { where: { id: socket.user.id } }
+    //       );
+
+    //       const agent = await User.findByPk(socket.user.id, {
+    //         attributes: ["id", "name", "email", "availability_status"],
+    //       });
+
+    //       // Broadcast agent went offline
+    //       io.emit("agent:status_changed", {
+    //         agent_id: socket.user.id,
+    //         agent: agent,
+    //         status: "offline",
+    //       });
+    //     } catch (err) {
+    //       console.error("Error setting agent offline:", err);
+    //     }
+    //   }
+    // });
+
     socket.on("disconnect", async () => {
-      console.log(`❌ User disconnected → ${socket.user.email}`);
+      const userId = socket.user.id;
 
-      // If agent disconnects, set status to offline
-      if (socket.user.role_name === "agent") {
-        try {
-          await User.update(
-            {
-              availability_status: "offline",
-              last_activity_at: new Date(),
-            },
-            { where: { id: socket.user.id } }
-          );
+      console.log(`❌ Socket disconnected → ${socket.user.email}`);
 
-          const agent = await User.findByPk(socket.user.id, {
-            attributes: ["id", "name", "email", "availability_status"],
-          });
+      // Remove this socket from tracking
+      if (userSockets.has(userId)) {
+        userSockets.get(userId).delete(socket.id);
 
-          // Broadcast agent went offline
-          io.emit("agent:status_changed", {
-            agent_id: socket.user.id,
-            agent: agent,
-            status: "offline",
-          });
-        } catch (err) {
-          console.error("Error setting agent offline:", err);
+        // Cleanup empty sets
+        if (userSockets.get(userId).size === 0) {
+          userSockets.delete(userId);
+
+          // Grace delay before marking offline
+          setTimeout(async () => {
+            // Check if user reconnected
+            if (!userSockets.has(userId)) {
+              if (socket.user.role_name === "agent") {
+                await User.update(
+                  {
+                    availability_status: "offline",
+                    last_activity_at: new Date(),
+                  },
+                  { where: { id: userId } }
+                );
+
+                const agent = await User.findByPk(userId, {
+                  attributes: ["id", "name", "email", "availability_status"],
+                });
+
+                io.emit("agent:status_changed", {
+                  agent_id: userId,
+                  agent,
+                  status: "offline",
+                });
+              }
+            }
+          }, 5000); // 5 sec grace
         }
       }
     });
+
   });
 };

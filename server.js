@@ -45,9 +45,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting
-app.use('/api/', apiLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+if (process.env.NODE_ENV === "production") {
+    logger.info("🛡️  API rate limiting ENABLED (production)");
+    app.use("/api", apiLimiter);
+    app.use("/api/auth/login", authLimiter);
+    app.use("/api/auth/register", authLimiter);
+} else {
+    logger.warn("⚠️  API rate limiting DISABLED (development)");
+}
 
 // Serve uploads folder
 // app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -81,6 +86,13 @@ const kbUploadRoutes = require("./src/routes/phase4/kbUploadRoutes");
 app.use("/api/kb/categories", kbCategoryRoutes);
 app.use("/api/kb/articles", kbArticleRoutes);
 app.use("/api/kb/upload", kbUploadRoutes);
+// const adminUserRoutes = require("./src/routes/phase4/userRoutes");
+// app.use("/api/admin/users", adminUserRoutes);
+
+const adminUserRoutes = require("./src/routes/phase4/userRoutes");
+app.use("/api/admin/users", adminUserRoutes);
+
+
 
 // Phase 5 Routes (REST)
 const liveChatRoutes = require("./src/routes/phase5/liveChatRoutes");

@@ -22,6 +22,7 @@ const KBCategoryModel = require("./phase4/KBCategory");
 const KBArticleModel = require("./phase4/KBArticle");
 const KBArticleHistoryModel = require("./phase4/KBArticleHistory");
 
+
 // Phase 5
 const LiveChatSessionModel = require("./phase5/LiveChatSession");
 const LiveChatMessageModel = require("./phase5/LiveChatMessage");

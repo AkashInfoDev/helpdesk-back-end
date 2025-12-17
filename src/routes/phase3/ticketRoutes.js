@@ -53,6 +53,14 @@ router.get(
     ticketController.getTicketsByCategory
 );
 
+router.get(
+    "/category/:category_id",
+    authMiddleware,
+    roleMiddleware(["agent", "admin"]),
+    ticketController.getTicketsByCategory
+);
+
+
 // ------------------------------------------------------
 // ADMIN: GET ALL TICKETS
 // ------------------------------------------------------
@@ -60,6 +68,7 @@ router.get(
     "/",
     authMiddleware,
     roleMiddleware(["admin"]),
+    // roleMiddleware(["customer", "agent"]),
     ticketController.getAllTickets
 );
 
@@ -83,5 +92,13 @@ router.post(
     upload.single("file"),
     attachmentController.uploadAttachment
 );
+
+router.get(
+    "/agent/my-active",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.getMyActiveTickets
+);
+
 
 module.exports = router;
