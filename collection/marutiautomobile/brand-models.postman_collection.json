@@ -1,0 +1,75 @@
+{
+    "info": {
+        "name": "Brand Models API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Get Brand Models (Paginated)",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "http://localhost:6000/api/brand-models?page=1&limit=10",
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Models By Brand",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:6000/api/brand-models?brand_id=1"
+            }
+        },
+        {
+            "name": "Create Brand Model",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:6000/api/brand-models",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"brand_id\": 1,\n  \"model_name\": \"iPhone 14\",\n  \"storage\": \"128GB\",\n  \"ram\": \"6GB\",\n  \"color\": \"Black\",\n  \"sell_price\": 69999,\n  \"is_active\": true\n}"
+                }
+            }
+        },
+        {
+            "name": "Update Brand Model",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:6000/api/brand-models/1",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"sell_price\": 67999\n}"
+                }
+            }
+        },
+        {
+            "name": "Delete Brand Model",
+            "request": {
+                "method": "DELETE",
+                "url": "http://localhost:6000/api/brand-models/1"
+            }
+        }
+    ]
+}

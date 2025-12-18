@@ -1,0 +1,75 @@
+{
+    "info": {
+        "name": "Stocks API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Get Stocks (Paginated)",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "http://localhost:6000/api/stocks?page=1&limit=10",
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Available Stock",
+            "request": {
+                "method": "GET",
+                "url": "http://localhost:6000/api/stocks?status=available"
+            }
+        },
+        {
+            "name": "Create Stock",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:6000/api/stocks",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"brand_id\": 1,\n  \"model_id\": 1,\n  \"imei\": \"356789123456789\",\n  \"purchase_price\": 62000,\n  \"purchase_date\": \"2025-12-17\",\n  \"supplier\": \"Apple Distributor\",\n  \"warranty\": \"1 Year\",\n  \"condition\": \"new\",\n  \"status\": \"available\"\n}"
+                }
+            }
+        },
+        {
+            "name": "Update Stock (Sell)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:6000/api/stocks/1",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"status\": \"sold\"\n}"
+                }
+            }
+        },
+        {
+            "name": "Delete Stock",
+            "request": {
+                "method": "DELETE",
+                "url": "http://localhost:6000/api/stocks/1"
+            }
+        }
+    ]
+}

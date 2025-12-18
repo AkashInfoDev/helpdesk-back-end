@@ -1,0 +1,68 @@
+{
+    "info": {
+        "name": "Brands API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Get Brands (Paginated)",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "http://localhost:6000/api/brands?page=1&limit=10",
+                    "query": [
+                        {
+                            "key": "page",
+                            "value": "1"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Create Brand",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:6000/api/brands",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"brand_name\": \"Apple\",\n  \"is_active\": true\n}"
+                }
+            }
+        },
+        {
+            "name": "Update Brand",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": "http://localhost:6000/api/brands/1",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"brand_name\": \"Apple Updated\"\n}"
+                }
+            }
+        },
+        {
+            "name": "Delete Brand",
+            "request": {
+                "method": "DELETE",
+                "url": "http://localhost:6000/api/brands/1"
+            }
+        }
+    ]
+}

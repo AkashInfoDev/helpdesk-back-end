@@ -211,3 +211,114 @@ exports.getProfile = (req, res) => {
         return res.status(500).json({ message: "Server Error" });
     }
 };
+
+
+
+
+exports.forgotPasswordSendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Clear old OTPs
+        await Otp.destroy({ where: { email } });
+
+        await Otp.create({
+            email,
+            otp: otpCode,
+            role: "password_reset",
+            expires_at: expiresAt,
+        });
+
+        await sendOtpEmail(email, otpCode);
+
+        return res.json({ message: "OTP sent to email" });
+    } catch (error) {
+        console.error("Forgot Password OTP Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+exports.forgotPasswordVerifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ message: "Email and OTP required" });
+        }
+
+        const otpEntry = await Otp.findOne({
+            where: { email, otp, role: "password_reset" },
+        });
+
+        if (!otpEntry) {
+            return res.status(400).json({ message: "Invalid OTP" });
+        }
+
+        if (otpEntry.is_verified) {
+            return res.status(400).json({ message: "OTP already used" });
+        }
+
+        if (new Date() > otpEntry.expires_at) {
+            return res.status(400).json({ message: "OTP expired" });
+        }
+
+        otpEntry.is_verified = true;
+        await otpEntry.save();
+
+        return res.json({ message: "OTP verified successfully" });
+    } catch (error) {
+        console.error("Verify Forgot OTP Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+
+        if (!email || !newPassword) {
+            return res.status(400).json({ message: "Email and new password required" });
+        }
+
+        const otpEntry = await Otp.findOne({
+            where: {
+                email,
+                role: "password_reset",
+                is_verified: true,
+            },
+        });
+
+        if (!otpEntry) {
+            return res.status(400).json({ message: "OTP verification required" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await User.update(
+            { password: hashedPassword },
+            { where: { email } }
+        );
+
+        // Cleanup OTP after success
+        await Otp.destroy({ where: { email, role: "password_reset" } });
+
+        return res.json({ message: "Password reset successfully" });
+    } catch (error) {
+        console.error("Reset Password Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};

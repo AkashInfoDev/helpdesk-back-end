@@ -63,7 +63,7 @@ router.get("/:id/customer-context", auth, getCustomerContext);
 // ----------------------------------------
 // CONVERT CHAT → TICKET (AGENT + ADMIN)
 // ----------------------------------------
-router.post("/:id/convert-to-ticket", auth, role("agent", "admin"), convertToTicket);
+router.post("/:id/convert-to-ticket", auth, role("agent", "admin", "customer"), convertToTicket);
 
 
 // ----------------------------------------
