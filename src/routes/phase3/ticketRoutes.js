@@ -1,4 +1,144 @@
-// src/routes/phase3/ticketRoutes.js
+// // src/routes/phase3/ticketRoutes.js
+
+// const express = require("express");
+// const router = express.Router();
+
+// const ticketController = require("../../controllers/phase3/ticketController");
+// const messageController = require("../../controllers/phase3/ticketMessageController");
+// const attachmentController = require("../../controllers/phase3/ticketAttachmentController");
+
+// const authMiddleware = require("../../middleware/authMiddleware");
+// const roleMiddleware = require("../../middleware/roleMiddleware");
+
+// const upload = require("../../middleware/ticketUpload");
+// // handles file uploads for attachments
+
+// // ------------------------------------------------------
+// // TICKET CREATION (Customer Only)
+// // ------------------------------------------------------
+// router.post(
+//     "/",
+//     authMiddleware,
+//     roleMiddleware(["customer"]),
+//     ticketController.createTicket
+// );
+
+// // ------------------------------------------------------
+// // GET CUSTOMER TICKETS
+// // ------------------------------------------------------
+// router.get(
+//     "/my-tickets",
+//     authMiddleware,
+//     roleMiddleware(["customer"]),
+//     ticketController.getMyTickets
+// );
+
+// // ------------------------------------------------------
+// // GET TICKET DETAILS (Customer / Agent)
+// // ------------------------------------------------------
+// router.get(
+//     "/:ticket_id/messages",
+//     authMiddleware,
+//     roleMiddleware(["customer", "agent", "admin"]),
+//     messageController.getTicketMessages
+// );
+
+// // ------------------------------------------------------
+// // AGENT: GET TICKETS BY CATEGORY
+// // ------------------------------------------------------
+// router.get(
+//     "/category/:category_id",
+//     authMiddleware,
+//     roleMiddleware(["agent", "admin"]),
+//     ticketController.getTicketsByCategory
+// );
+
+// router.get(
+//     "/category/:category_id",
+//     authMiddleware,
+//     roleMiddleware(["agent", "admin"]),
+//     ticketController.getTicketsByCategory
+// );
+
+
+// // ------------------------------------------------------
+// // ADMIN: GET ALL TICKETS
+// // ------------------------------------------------------
+// router.get(
+//     "/",
+//     authMiddleware,
+//     roleMiddleware(["admin"]),
+//     // roleMiddleware(["customer", "agent"]),
+//     ticketController.getAllTickets
+// );
+
+// // ------------------------------------------------------
+// // ADD MESSAGE TO TICKET (Customer & Agent)
+// // Auto-assigns agent when agent replies
+// // ------------------------------------------------------
+// router.post(
+//     "/:ticket_id/message",
+//     authMiddleware,
+//     roleMiddleware(["customer", "agent"]),
+//     messageController.addMessage
+// );
+
+// router.get(
+//     "/:ticket_id/messages",
+//     authMiddleware,
+//     roleMiddleware(["customer", "agent", "admin"]),
+//     messageController.getTicketMessages
+// );
+
+
+// // ------------------------------------------------------
+// // ADD ATTACHMENT TO MESSAGE
+// // ------------------------------------------------------
+// router.post(
+//     "/:ticket_id/message/:message_id/attachment",
+//     authMiddleware,
+//     upload.single("file"),
+//     attachmentController.uploadAttachment
+// );
+
+// router.get(
+//     "/agent/my-active",
+//     authMiddleware,
+//     roleMiddleware(["agent"]),
+//     ticketController.getMyActiveTickets
+// );
+
+// router.get(
+//     "/queue",
+//     authMiddleware,
+//     roleMiddleware(["agent", "admin"]),
+//     ticketController.getUnassignedTickets
+// );
+
+// router.patch(
+//     "/:ticket_id/assign",
+//     authMiddleware,
+//     roleMiddleware(["agent"]),
+//     ticketController.assignTicketToSelf
+// );
+
+// router.patch(
+//     "/:ticket_id/resolve",
+//     authMiddleware,
+//     roleMiddleware(["agent"]),
+//     ticketController.resolveTicket
+// );
+
+// router.get(
+//     "/agent/resolved",
+//     authMiddleware,
+//     roleMiddleware(["agent"]),
+//     ticketController.getMyResolvedTickets
+// );
+
+
+
+// module.exports = router;
 
 const express = require("express");
 const router = express.Router();
@@ -9,22 +149,44 @@ const attachmentController = require("../../controllers/phase3/ticketAttachmentC
 
 const authMiddleware = require("../../middleware/authMiddleware");
 const roleMiddleware = require("../../middleware/roleMiddleware");
-
 const upload = require("../../middleware/ticketUpload");
-// handles file uploads for attachments
 
 // ------------------------------------------------------
-// TICKET CREATION (Customer Only)
+// STATIC / SYSTEM ROUTES (KEEP FIRST)
 // ------------------------------------------------------
-router.post(
-    "/",
+router.get(
+    "/queue",
     authMiddleware,
-    roleMiddleware(["customer"]),
-    ticketController.createTicket
+    roleMiddleware(["agent", "admin"]),
+    ticketController.getUnassignedTickets
+);
+
+router.get(
+    "/agent/my-active",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.getMyActiveTickets
+);
+
+router.get(
+    "/agent/resolved",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.getMyResolvedTickets
 );
 
 // ------------------------------------------------------
-// GET CUSTOMER TICKETS
+// CATEGORY
+// ------------------------------------------------------
+router.get(
+    "/category/:category_id",
+    authMiddleware,
+    roleMiddleware(["agent", "admin"]),
+    ticketController.getTicketsByCategory
+);
+
+// ------------------------------------------------------
+// CUSTOMER
 // ------------------------------------------------------
 router.get(
     "/my-tickets",
@@ -34,47 +196,7 @@ router.get(
 );
 
 // ------------------------------------------------------
-// GET TICKET DETAILS (Customer / Agent)
-// ------------------------------------------------------
-router.get(
-    "/:ticket_id/messages",
-    authMiddleware,
-    roleMiddleware(["customer", "agent", "admin"]),
-    messageController.getTicketMessages
-);
-
-// ------------------------------------------------------
-// AGENT: GET TICKETS BY CATEGORY
-// ------------------------------------------------------
-router.get(
-    "/category/:category_id",
-    authMiddleware,
-    roleMiddleware(["agent", "admin"]),
-    ticketController.getTicketsByCategory
-);
-
-router.get(
-    "/category/:category_id",
-    authMiddleware,
-    roleMiddleware(["agent", "admin"]),
-    ticketController.getTicketsByCategory
-);
-
-
-// ------------------------------------------------------
-// ADMIN: GET ALL TICKETS
-// ------------------------------------------------------
-router.get(
-    "/",
-    authMiddleware,
-    roleMiddleware(["admin"]),
-    // roleMiddleware(["customer", "agent"]),
-    ticketController.getAllTickets
-);
-
-// ------------------------------------------------------
-// ADD MESSAGE TO TICKET (Customer & Agent)
-// Auto-assigns agent when agent replies
+// MESSAGES
 // ------------------------------------------------------
 router.post(
     "/:ticket_id/message",
@@ -90,9 +212,8 @@ router.get(
     messageController.getTicketMessages
 );
 
-
 // ------------------------------------------------------
-// ADD ATTACHMENT TO MESSAGE
+// ATTACHMENTS
 // ------------------------------------------------------
 router.post(
     "/:ticket_id/message/:message_id/attachment",
@@ -101,41 +222,31 @@ router.post(
     attachmentController.uploadAttachment
 );
 
+// ------------------------------------------------------
+// SINGLE TICKET (IMPORTANT: KEEP LAST)
+// ------------------------------------------------------
 router.get(
-    "/agent/my-active",
+    "/:ticket_id",
     authMiddleware,
-    roleMiddleware(["agent"]),
-    ticketController.getMyActiveTickets
+    roleMiddleware(["customer", "agent", "admin"]),
+    ticketController.getTicketDetails
 );
 
-router.get(
-    "/queue",
+// ------------------------------------------------------
+// CREATE / ADMIN
+// ------------------------------------------------------
+router.post(
+    "/",
     authMiddleware,
-    roleMiddleware(["agent", "admin"]),
-    ticketController.getUnassignedTickets
-);
-
-router.patch(
-    "/:ticket_id/assign",
-    authMiddleware,
-    roleMiddleware(["agent"]),
-    ticketController.assignTicketToSelf
-);
-
-router.patch(
-    "/:ticket_id/resolve",
-    authMiddleware,
-    roleMiddleware(["agent"]),
-    ticketController.resolveTicket
+    roleMiddleware(["customer"]),
+    ticketController.createTicket
 );
 
 router.get(
-    "/agent/resolved",
+    "/",
     authMiddleware,
-    roleMiddleware(["agent"]),
-    ticketController.getMyResolvedTickets
+    roleMiddleware(["admin"]),
+    ticketController.getAllTickets
 );
-
-
 
 module.exports = router;
