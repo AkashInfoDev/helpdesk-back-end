@@ -37,10 +37,10 @@ router.get(
 // GET TICKET DETAILS (Customer / Agent)
 // ------------------------------------------------------
 router.get(
-    "/:ticket_id",
+    "/:ticket_id/messages",
     authMiddleware,
     roleMiddleware(["customer", "agent", "admin"]),
-    ticketController.getTicketDetails
+    messageController.getTicketMessages
 );
 
 // ------------------------------------------------------
@@ -83,6 +83,14 @@ router.post(
     messageController.addMessage
 );
 
+router.get(
+    "/:ticket_id/messages",
+    authMiddleware,
+    roleMiddleware(["customer", "agent", "admin"]),
+    messageController.getTicketMessages
+);
+
+
 // ------------------------------------------------------
 // ADD ATTACHMENT TO MESSAGE
 // ------------------------------------------------------
@@ -99,6 +107,35 @@ router.get(
     roleMiddleware(["agent"]),
     ticketController.getMyActiveTickets
 );
+
+router.get(
+    "/queue",
+    authMiddleware,
+    roleMiddleware(["agent", "admin"]),
+    ticketController.getUnassignedTickets
+);
+
+router.patch(
+    "/:ticket_id/assign",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.assignTicketToSelf
+);
+
+router.patch(
+    "/:ticket_id/resolve",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.resolveTicket
+);
+
+router.get(
+    "/agent/resolved",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.getMyResolvedTickets
+);
+
 
 
 module.exports = router;

@@ -202,3 +202,104 @@ exports.getMyActiveTickets = async (req, res) => {
         return res.status(500).json({ message: "Server Error" });
     }
 };
+
+
+exports.getUnassignedTickets = async (req, res) => {
+    try {
+        const tickets = await Ticket.findAll({
+            where: {
+                agent_id: null,
+                status: "open",
+            },
+            include: [
+                { model: TicketCategory, as: "category" },
+                { model: User, as: "customer", attributes: ["id", "name"] },
+            ],
+            order: [["createdAt", "ASC"]],
+        });
+
+        res.json(tickets);
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+exports.assignTicketToSelf = async (req, res) => {
+    try {
+        const agent_id = req.user.id;
+        const { ticket_id } = req.params;
+
+        const ticket = await Ticket.findByPk(ticket_id);
+
+        if (!ticket) {
+            return res.status(404).json({ message: "Ticket not found" });
+        }
+
+        if (ticket.agent_id) {
+            return res.status(400).json({ message: "Ticket already assigned" });
+        }
+
+        await ticket.update({
+            agent_id,
+            status: "in_progress",
+        });
+
+        res.json({ message: "Ticket assigned successfully", ticket });
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+exports.resolveTicket = async (req, res) => {
+    try {
+        const agent_id = req.user.id;
+        const { ticket_id } = req.params;
+
+        const ticket = await Ticket.findOne({
+            where: {
+                id: ticket_id,
+                agent_id,
+            },
+        });
+
+        if (!ticket) {
+            return res.status(403).json({
+                message: "You are not assigned to this ticket",
+            });
+        }
+
+        await ticket.update({
+            status: "resolved",
+        });
+
+        res.json({ message: "Ticket resolved successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+exports.getMyResolvedTickets = async (req, res) => {
+    try {
+        const agent_id = req.user.id;
+
+        const tickets = await Ticket.findAll({
+            where: {
+                agent_id,
+                status: "resolved",
+            },
+            include: [
+                { model: TicketCategory, as: "category" },
+                { model: User, as: "customer", attributes: ["id", "name"] },
+                { model: User, as: "agent", attributes: ["id", "name"] },
+            ],
+            order: [["updatedAt", "DESC"]],
+        });
+
+        return res.json(tickets);
+    } catch (error) {
+        console.error("Get My Resolved Tickets Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};

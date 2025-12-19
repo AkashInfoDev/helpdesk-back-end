@@ -203,15 +203,66 @@ exports.login = async (req, res) => {
 // ------------------------------------------------------
 // PROFILE
 // ------------------------------------------------------
-exports.getProfile = (req, res) => {
+// exports.getProfile = (req, res) => {
+//     try {
+//         return res.json(req.user);
+//     } catch (error) {
+//         console.error("Profile Error:", error);
+//         return res.status(500).json({ message: "Server Error" });
+//     }
+// };
+
+// const { User } = require("../models");
+
+// ------------------------------------------------------
+// GET PROFILE (Customer / Agent - Single API)
+// ------------------------------------------------------
+exports.getProfile = async (req, res) => {
     try {
-        return res.json(req.user);
+        const user = req.user; // injected by authMiddleware
+
+        // 🧠 Base profile (common for all)
+        const baseProfile = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role_name,
+            status: user.status,
+            avatar_url: user.avatar_url,
+            createdAt: user.createdAt,
+        };
+
+        // 👤 CUSTOMER PROFILE
+        if (user.role_name === "customer") {
+            return res.json({
+                type: "customer",
+                profile: baseProfile,
+            });
+        }
+
+        // 🎧 AGENT PROFILE
+        if (user.role_name === "agent") {
+            return res.json({
+                type: "agent",
+                profile: {
+                    ...baseProfile,
+                    availability_status: user.availability_status,
+                    last_activity_at: user.last_activity_at,
+                    max_concurrent_chats: user.max_concurrent_chats,
+                    skills: user.skills,
+                },
+            });
+        }
+
+        // 🛑 Fallback (safety net)
+        return res.status(403).json({
+            message: "Invalid user role",
+        });
     } catch (error) {
-        console.error("Profile Error:", error);
+        console.error("Get Profile Error:", error);
         return res.status(500).json({ message: "Server Error" });
     }
 };
-
 
 
 
@@ -319,6 +370,100 @@ exports.resetPassword = async (req, res) => {
         return res.json({ message: "Password reset successfully" });
     } catch (error) {
         console.error("Reset Password Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};
+
+
+// ------------------------------------------------------
+// UPDATE CUSTOMER PROFILE
+// ------------------------------------------------------
+exports.updateCustomerProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { name } = req.body;
+
+        // 🛑 Role Guard
+        if (req.user.role_name !== "customer") {
+            return res.status(403).json({
+                message: "Access denied. Customer only API.",
+            });
+        }
+
+        if (!name || name.trim().length < 2) {
+            return res.status(400).json({
+                message: "Name must be at least 2 characters long",
+            });
+        }
+
+        await User.update(
+            { name: name.trim() },
+            { where: { id: userId } }
+        );
+
+        const updatedUser = await User.findByPk(userId, {
+            attributes: ["id", "name", "email", "status"],
+        });
+
+        return res.json({
+            message: "Customer profile updated successfully",
+            user: updatedUser,
+        });
+    } catch (error) {
+        console.error("Customer Profile Update Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};
+
+// ------------------------------------------------------
+// UPDATE AGENT PROFILE
+// ------------------------------------------------------
+exports.updateAgentProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const {
+            name,
+            availability_status,
+            max_concurrent_chats,
+            skills,
+        } = req.body;
+
+        // 🛑 Role Guard
+        if (req.user.role_name !== "agent") {
+            return res.status(403).json({
+                message: "Access denied. Agent only API.",
+            });
+        }
+
+        const updateData = {};
+
+        if (name) updateData.name = name.trim();
+        if (availability_status)
+            updateData.availability_status = availability_status;
+        if (max_concurrent_chats)
+            updateData.max_concurrent_chats = max_concurrent_chats;
+        if (skills) updateData.skills = skills;
+
+        await User.update(updateData, { where: { id: userId } });
+
+        const updatedAgent = await User.findByPk(userId, {
+            attributes: [
+                "id",
+                "name",
+                "email",
+                "availability_status",
+                "max_concurrent_chats",
+                "skills",
+                "status",
+            ],
+        });
+
+        return res.json({
+            message: "Agent profile updated successfully",
+            user: updatedAgent,
+        });
+    } catch (error) {
+        console.error("Agent Profile Update Error:", error);
         return res.status(500).json({ message: "Server Error" });
     }
 };

@@ -89,3 +89,53 @@ exports.addMessage = async (req, res) => {
         return res.status(500).json({ message: "Server Error" });
     }
 };
+
+
+exports.getTicketMessages = async (req, res) => {
+    try {
+        const { ticket_id } = req.params;
+        const user_id = req.user.id;
+        const role = req.user.role_name;
+
+        const ticket = await Ticket.findByPk(ticket_id);
+
+        if (!ticket) {
+            return res.status(404).json({ message: "Ticket not found" });
+        }
+
+        // CUSTOMER: can see only their own ticket
+        if (role === "customer" && ticket.customer_id !== user_id) {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+
+        // AGENT: must be assigned OR admin
+        if (
+            role === "agent" &&
+            ticket.agent_id &&
+            ticket.agent_id !== user_id
+        ) {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+
+        const messages = await TicketMessage.findAll({
+            where: { ticket_id },
+            include: [
+                {
+                    model: TicketAttachment,
+                    as: "attachments",
+                },
+                {
+                    model: User,
+                    as: "sender",
+                    attributes: ["id", "name"],
+                },
+            ],
+            order: [["createdAt", "ASC"]],
+        });
+
+        return res.json(messages);
+    } catch (error) {
+        console.error("Get Ticket Messages Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+};

@@ -214,6 +214,21 @@ CannedResponse.belongsTo(User, {
     constraints: false,
 });
 
+
+// Message → Sender (Customer or Agent)
+User.hasMany(TicketMessage, {
+    foreignKey: "sender_id",
+    as: "sentMessages",
+    constraints: false,
+});
+
+TicketMessage.belongsTo(User, {
+    foreignKey: "sender_id",
+    as: "sender",
+    constraints: false,
+});
+
+
 // --------------------------------------------
 // EXPORT ALL MODELS
 // --------------------------------------------
