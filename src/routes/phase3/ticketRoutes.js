@@ -249,4 +249,22 @@ router.get(
     ticketController.getAllTickets
 );
 
+router.patch(
+    "/:ticket_id/assign",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.assignTicketToSelf
+);
+
+router.patch(
+    "/:ticket_id/resolve",
+    authMiddleware,
+    roleMiddleware(["agent"]),
+    ticketController.resolveTicket
+);
+
+
+
+
+
 module.exports = router;

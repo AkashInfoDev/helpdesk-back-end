@@ -43,7 +43,7 @@ router.put("/:id", auth, role("agent"), updateCannedResponse);
 router.delete("/:id", auth, role("agent"), deleteCannedResponse);
 
 // Use canned response (with variable substitution)
-router.post("/:id/use", auth, role("agent"), useCannedResponse);
+router.post("/use/:id", auth, role("agent"), useCannedResponse);
 
 module.exports = router;
 
